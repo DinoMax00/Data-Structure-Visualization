@@ -1,6 +1,4 @@
-# Data-Structure-Visualization
-
-CS10016502
+# ds-proj
 
 ## Project setup
 ```
