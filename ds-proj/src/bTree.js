@@ -1,19 +1,25 @@
-// 实现3阶b-树
+// 实现3阶b-树 附带可视化
+import { Visuer } from './bTreeVisu'
 const MIN_KEY = 1
 const MAX_KEY = 2
-
+let id = 0
+const xNum = []
+const nodeDepth = []
+const nodeIdx = []
 class BTnode {
   constructor () {
     this.keys = []
     this.childs = []
     this.par = null
     this.n = 0
+    this.id = ++id
   }
 
   // 控制台输出
   printTree () {
     console.log('cur', this.keys)
     console.log('par', this.par.keys)
+    console.log('???', this.par.childs)
     console.log('----')
     for (let i = 0; i < this.childs.length; ++i) this.childs[i].printTree()
   }
@@ -25,7 +31,6 @@ class BTnode {
 
     let i = 0
     while (i < this.n && this.keys[i] < val) { ++i }
-
     if (i < this.n && this.keys[i] === val) {
       trace.push(true)
       return
@@ -56,6 +61,7 @@ class BTnode {
     this.n++
     if (this.n <= MAX_KEY) { return }
     this.splitChild()
+    this.printTree()
   }
 
   // 删除操作
@@ -80,6 +86,8 @@ class BTnode {
     this.keys[idx] = maxNode.keys.slice(-1)[0]
     maxNode.keys.pop()
     maxNode.n--
+    console.log(this, maxNode)
+    if (val === 0) return
     maxNode.reBalance()
   }
 
@@ -105,17 +113,20 @@ class BTnode {
       z.keys.push(this.keys[i])
       if (!leaf) {
         z.childs.push(this.childs[i])
+        Visuer.removeLine(this.childs[i].par.id, this.childs[i].id)
         this.childs[i].par = z
       }
     }
     if (!leaf) {
+      Visuer.removeLine(this.childs[this.n].par.id, this.childs[this.n].id)
       z.childs.push(this.childs[this.n])
       this.childs[this.n].par = z
     }
     z.n = MAX_KEY - MIN_KEY
     z.par = x
+    console.log(x)
+    Visuer.initNode(x.par === null ? this.id : x.id, z.id)
     x.childs.splice(pos + 1, 0, z)
-
     this.n = MIN_KEY
     this.keys.splice(MIN_KEY)
     this.childs.splice(MIN_KEY + 1)
@@ -128,6 +139,10 @@ class BTnode {
     if (this.par.keys.length === 0) {
       if (this.childs.length === 0) return
       const temp = this.childs[0]
+      console.log(temp.id, temp.childs.length)
+      for (const child of temp.childs) Visuer.removeLine(temp.id, child.id)
+      Visuer.removeLine(this.id, this.childs[0].id)
+      Visuer.removeNode(this.childs[0].id)
       this.childs = temp.childs
       this.keys = temp.keys
       this.n = temp.n
@@ -142,8 +157,17 @@ class BTnode {
         par.keys[0] = bro.keys[0]
         bro.keys.splice(0, 1)
         bro.n--
+        // !!!!
+        if (bro.childs.length > bro.n + 1) {
+          Visuer.removeLine(bro.id, bro.childs[0].id)
+          this.childs.push(bro.childs[0])
+          bro.childs[0].par = this
+          bro.childs.splice(0, 1)
+        }
       } else {
+        Visuer.removeLine(bro.par.id, bro.id)
         this.mergeRhs(bro)
+        Visuer.removeNode(bro.id)
         par.childs.splice(1, 1)
         par.keys.splice(0, 1)
         par.n--
@@ -159,8 +183,17 @@ class BTnode {
         par.keys[pn - 1] = bro.keys[bn - 1]
         bro.keys.splice(bn - 1, 1)
         bro.n--
+        if (bro.childs.length > bro.n + 1) {
+          const tmp = bro.n
+          Visuer.removeLine(bro.id, bro.childs[tmp].id)
+          this.childs.push(bro.childs[tmp])
+          bro.childs[tmp].par = this
+          bro.childs.splice(tmp, 1)
+        }
       } else {
+        Visuer.removeLine(bro.par.id, bro.id)
         this.mergeLhs(bro)
+        Visuer.removeNode(bro.id)
         par.childs.splice(bn - 1, 1)
         par.keys.splice(pn - 1, 1)
         par.n--
@@ -177,6 +210,7 @@ class BTnode {
     for (const val of node.childs) {
       val.par = this.par
       this.childs.push(val)
+      Visuer.removeLine(node.id, val.id)
     }
     this.n = this.keys.length
   }
@@ -184,7 +218,11 @@ class BTnode {
   // 与左结点合并
   mergeLhs (node) {
     for (const val of node.keys) this.keys.splice(0, 0, val)
-    for (const val of node.childs) this.childs.splice(0, 0, val)
+    for (const val of node.childs) {
+      val.par = this.par
+      this.childs.splice(0, 0, val)
+      Visuer.removeLine(node.id, val.id)
+    }
     this.n = this.keys.length
   }
 
@@ -194,12 +232,49 @@ class BTnode {
       if (this.childs[i] === node) return i
     }
   }
+
+  // dfs 获取每层元素个数
+  dfs (depth) {
+    xNum[depth]++
+    nodeDepth[this.id] = depth
+    nodeIdx[this.id] = xNum[depth]
+    for (const child of this.childs) {
+      child.dfs(depth + 1)
+    }
+  }
+
+  updateLine (depth) {
+    const src = {
+      id: this.id,
+      depth: depth,
+      idx: nodeIdx[this.id],
+      tot: xNum[depth]
+    }
+    for (const child of this.childs) {
+      child.updateLine(depth + 1)
+      const tgt = {
+        id: child.id,
+        depth: depth + 1,
+        idx: nodeIdx[child.id],
+        tot: xNum[depth + 1]
+      }
+      Visuer.updateLine(src, tgt, depth)
+    }
+  }
+
+  // 更新各节点位置
+  updatePos (depth) {
+    const id = this.id
+    Visuer.updateNode(id, depth, nodeIdx[id], xNum[depth], this.keys.toString())
+    for (const child of this.childs) {
+      child.updatePos(depth + 1)
+    }
+  }
 }
 
 export class Tree {
   constructor () {
-    this.node = new BTnode()
-    this.makeRT()
+    this.clear()
   }
 
   makeRT () {
@@ -219,22 +294,41 @@ export class Tree {
       this.node = this.node.par
     }
     this.makeRT()
+    this.update()
+    this.print()
   }
 
   delete (val) {
-    console.log(this.node)
     const trace = this.search(val)
     if (!trace.slice(-1)[0]) return false
     const tar = trace.slice(-2)[0]
     tar.delete(val)
+    this.update()
+    this.print()
   }
 
   clear () {
+    id = 0
     this.node = new BTnode()
     this.makeRT()
+    const a = [1, 2, 3, 4, 0, 5, -1, 6, 7]
+    for (const i of a) {
+      this.insert(i)
+    }
+    this.delete(2)
+    this.delete(4)
+    // 删0会出问题！！！！！
+  }
+
+  update () {
+    for (let i = 0; i < 10; ++i) xNum[i] = 0
+    this.node.dfs(1)
+    this.node.updateLine(1)
+    this.node.updatePos(1)
   }
 
   print () {
+    console.log('look!---------------')
     this.node.printTree()
   }
 }

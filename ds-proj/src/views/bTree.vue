@@ -8,28 +8,21 @@
     <!-- 侧边栏 -->
     <el-col :span="6">
       <div class="subwindow menu-color">
-        <div class="block">
-          <div class="demonstration">Max Depth:</div>
-          <el-slider
-            v-model="val"
-            :step="1"
-            :min = "3"
-            :max = "7"
-            show-stops
-            show-input>
-          </el-slider>
+        <div class="block" style="padding-bottom: 0px;padding-top: 15px;">
+          <h1 class="title">🛫 B- Tree Visulation 🛫</h1>
+          <p>A 3-order b-tree, which supports insert, delete and query operation.</p>
         </div>
-        <div class="block">
+        <div class="block" style="padding-top: 10px;">
           <div class="demonstration">Insert A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
+          <el-input v-model="insertVal" placeholder="Press Enter to confirm" @keydown.enter='insert()'></el-input>
         </div>
         <div class="block">
           <div class="demonstration">Delete A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
+          <el-input v-model="deleteVal" placeholder="Press Enter to confirm" @keydown.enter='del()'></el-input>
         </div>
         <div class="block">
           <div class="demonstration">Find A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
+          <el-input v-model="findVal" placeholder="Press Enter to confirm" @keydown.enter='find()'></el-input>
         </div>
           <div style="text-align: center;">
             <img :src="logoUrl"/>
@@ -49,48 +42,72 @@
 <script>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
+// import * as d3 from 'd3'
 import { Tree } from '../bTree'
+
 export default {
   setup () {
+    let tree
     const logoUrl = require('../assets/logo.png')
 
     const router = useRouter()
 
     const goBack = () => {
+      tree.insert(5)
       router.push('/')
     }
 
     onMounted(() => {
-      console.log('ready')
-      const tree = new Tree()
-      const a = [1, 2, 3, 5, 6, 7, 8]
-      for (const i of a) {
-        tree.insert(i)
-      }
-      tree.delete(5)
-      tree.delete(7)
-      tree.delete(6)
-      tree.delete(3)
-      tree.delete(8)
-      tree.delete(2)
-      tree.delete(1)
-      console.log('---del---')
-      tree.print()
+      // const svg = d3.selectAll('svg')
+      // const zoomHandler = d3.zoom()
+      //   .on('zoom', zoomActions)
+      // zoomHandler(svg)
+      // function zoomActions () {
+      //   svg.attr('transform', d3.event.transform)
+      // }
+      tree = new Tree()
     })
 
     const val = ref(4)
+    const insertVal = ref('')
+    const deleteVal = ref('')
+    const findVal = ref('')
+
+    const insert = () => {
+      tree.insert(parseInt(insertVal.value))
+      insertVal.value = ''
+    }
+
+    const del = () => {
+      tree.delete(parseInt(deleteVal.value))
+      deleteVal.value = ''
+    }
+
+    const find = () => {
+      tree.search(parseInt(findVal.value))
+      findVal.value = ''
+    }
 
     return {
+      insert,
+      del,
+      goBack,
+      find,
+      findVal,
+      deleteVal,
+      insertVal,
       logoUrl,
-      val,
-      goBack
+      val
     }
   }
 }
 </script>
 
 <style scoped>
+.title {
+  text-align: center;
+  font-size: 20px;
+}
 
 .el-page-header{
     background-color: white;
@@ -103,9 +120,9 @@ export default {
 .subwindow {
   box-sizing: border-box;
   height: 100%;
-  border-left: 2px solid #DCDFE6;
-  border-right: 2px solid #DCDFE6;
-  border-top: 4px solid #DCDFE6;
+  border-left: 5px solid #DCDFE6;
+  border-right: 5px solid #DCDFE6;
+  border-top: 8px solid #DCDFE6;
 }
 
 .demonstration {
@@ -123,7 +140,8 @@ export default {
 img {
   margin: 0 auto;
   padding-top: 15px;
-  height: 175px;
-  width: 175px;
+  height: 160px;
+  width: 160px;
 }
+
 </style>
