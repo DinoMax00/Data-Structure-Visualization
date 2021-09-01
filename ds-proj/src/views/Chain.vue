@@ -1,56 +1,96 @@
 <template>
-  <el-row  style="height: 8%">
-    <el-col :span='24'>
-      <el-page-header icon="el-icon-arrow-left" @back="goBack" content="Chain"></el-page-header>
+  <el-row style="height: 7%">
+    <el-col :span="24">
+      <el-page-header
+        icon="el-icon-arrow-left"
+        @back="goBack"
+        content="Editor"
+      ></el-page-header>
     </el-col>
   </el-row>
-  <el-row style="height: 92%">
+  <el-row style="height: 90%">
     <!-- 侧边栏 -->
     <el-col :span="6">
       <div class="subwindow menu-color">
-        <div class="block">
-          <div class="demonstration">Max Depth:</div>
-          <el-slider
-            v-model="val"
-            :step="1"
-            :min = "3"
-            :max = "7"
-            show-stops
-            show-input>
-          </el-slider>
+        <div class="block" style="padding-bottom: 0px; padding-top: 15px">
+          <h1 class="title">🛫 Markdown Editor 🛫</h1>
+          <p>say something</p>
         </div>
         <div class="block">
-          <div class="demonstration">Insert A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
+          <div class="demonstration">Find:</div>
+          <el-input
+            v-model="ask"
+            placeholder="Press Enter to confirm"
+            @keydown.enter='search()'
+          ></el-input>
         </div>
         <div class="block">
-          <div class="demonstration">Delete A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
-        </div>
-        <div class="block">
-          <div class="demonstration">Find A Number:</div>
-          <el-input v-model="input" placeholder="Press Enter to confirm"></el-input>
-        </div>
-          <div style="text-align: center;">
-            <img :src="logoUrl"/>
-            <footer>CS10016502. TongJi Univ</footer>
+          <div class="demonstration">Edit:</div>
+          <div style="text-align: center">
+            <el-button
+              type="primary"
+              icon="el-icon-d-arrow-left"
+              @click="ctrlZ"
+              circle
+            ></el-button>
+            <el-button
+              type="primary"
+              icon="el-icon-d-arrow-right"
+              @click="ctrlY"
+              circle
+            ></el-button>
           </div>
+        </div>
+        <div style="text-align: center">
+          <img :src="logoUrl" />
+          <footer>CS10016502. TongJi Univ</footer>
+        </div>
       </div>
     </el-col>
-    <!-- svg -->
+    <!-- md渲染页面 -->
     <el-col :span="18">
-        <div class="subwindow" >
-          <svg id="svg" width="100%" height="100%"></svg>
-        </div>
+      <div class="subwindow">
+        <textarea wrap="hard" :value="mdInput" @input="update"></textarea>
+        <div id="showWindow" v-html="compiledMarkdown"></div>
+      </div>
     </el-col>
+  </el-row>
+  <!-- 底部字数统计 -->
+  <el-row style="height: 3%">
+    <div class = "footer">
+      <span>&nbsp;&nbsp;🐳&nbsp;Markdown-Editor&nbsp;&nbsp;|&nbsp;</span>
+      <span>
+        <span class = "footer-tag">{{ tot }}</span>
+        bytes
+      </span>
+      <span>
+        <span class = "footer-tag">{{ alpha }}</span>
+        letters
+      </span>
+      <span>
+        <span class = "footer-tag">{{ number }}</span>
+        numbers
+      </span>
+      <span>
+        <span class = "footer-tag">{{ space }}</span>
+        spaces
+      </span>
+      <span>
+        <span class = "footer-tag">{{ line }}</span>
+        lines
+      </span>
+    </div>
   </el-row>
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-
-import * as d3 from 'd3'
+import { markdown } from 'markdown'
+import * as _ from 'lodash'
+// window.jQuery = $
+// require('../jquery.highlight-within-textarea.js')
+// require('../jquery.highlight-within-textarea.css')
 export default {
   setup () {
     const logoUrl = require('../assets/logo.png')
@@ -61,114 +101,123 @@ export default {
       router.push('/')
     }
 
-    onMounted(() => {
-      const svg = d3.select('svg').append('g')
-      const width = document.getElementById('svg').getBoundingClientRect().width / 3 * 2
-      const height = document.getElementById('svg').getBoundingClientRect().height / 3 * 2
-      // 准备数据
-      var nodes = [// 节点集
-        { name: '湖南邵阳' },
-        { name: '山东莱州' },
-        { name: '广东阳江' },
-        { name: '山东枣庄' },
-        { name: '泽' },
-        { name: '恒' },
-        { name: '鑫' },
-        { name: '明山' },
-        { name: '班长' }
-      ]
+    onMounted(() => { count() })
 
-      var edges = [// 边集
-        { source: 0, target: 4, relation: '籍贯', value: 1.3 },
-        { source: 4, target: 5, relation: '舍友', value: 1 },
-        { source: 4, target: 6, relation: '舍友', value: 1 },
-        { source: 4, target: 7, relation: '舍友', value: 1 },
-        { source: 1, target: 6, relation: '籍贯', value: 2 },
-        { source: 2, target: 5, relation: '籍贯', value: 0.9 },
-        { source: 3, target: 7, relation: '籍贯', value: 1 },
-        { source: 5, target: 6, relation: '同学', value: 1.6 },
-        { source: 6, target: 7, relation: '朋友', value: 0.7 },
-        { source: 6, target: 8, relation: '职责', value: 2 }
-      ]
-      const colorScale = d3.scaleOrdinal().domain(nodes.length).range(d3.schemeCategory10)
-      var forceSimulation = d3.forceSimulation()
-        .force('link', d3.forceLink())
-        .force('charge', d3.forceManyBody())
-        .force('center', d3.forceCenter())
+    let strPre = '## Hello World! ##'
+    const mdInput = ref('## Hello World! ##')
+    const tot = ref(0)
+    const alpha = ref(0)
+    const number = ref(0)
+    const space = ref(0)
+    const line = ref(0)
+    const ask = ref('')
+    const zStack = []
+    const yStack = []
 
-      forceSimulation.nodes(nodes)
-        .on('tick', ticked)// 这个函数很重要，后面给出具体实现和说明
-      // 生成边数据
-      forceSimulation.force('link')
-        .links(edges)
-        .distance(function (d) { // 每一边的长度
-          return d.value * 100
-        })
-      forceSimulation.force('center')
-        .x(width / 2)
-        .y(height / 2)
-
-      const links = svg.append('g')
-        .selectAll('line')
-        .data(edges)
-        .enter()
-        .append('line')
-        .attr('stroke', (d, i) => colorScale(i))
-        .attr('stroke-width', 1)
-
-      var gs = svg.selectAll('what')
-        .data(nodes)
-        .enter()
-        .append('g')
-        .attr('transform', function (d, i) {
-          var cirX = d.x
-          var cirY = d.y
-          return 'translate(' + cirX + ',' + cirY + ')'
-        })
-        .call(d3.drag()
-          .on('start', (d) => {
-            if (!d3.event.active) {
-              forceSimulation.alphaTarget(1).restart()
-            }
-            d.fx = d.x
-            d.fy = d.y
-          })
-          .on('drag', (d) => {
-            d.fx = d3.event.x
-            d.fy = d3.event.y
-          })
-          .on('end', (d) => {
-            if (!d3.event.active) {
-              forceSimulation.alphaTarget(0)
-            }
-            d.fx = null
-            d.fy = null
-          }))
-
-      gs.append('rect')
-        .attr('x', -5)
-        .attr('y', -5)
-        .attr('width', 10)
-        .attr('height', 30)
-        .attr('color', (d, i) => colorScale(i))
-
-      function ticked () {
-        links
-          .attr('x1', d => d.source.x)
-          .attr('y1', d => d.source.y)
-          .attr('x2', d => d.target.x)
-          .attr('y2', d => d.target.y)
-
-        gs
-          .attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')')
+    const compiledMarkdown = computed({
+      get () {
+        return markdown.toHTML(mdInput.value, 'Maruku')
       }
     })
 
-    const val = ref(4)
+    const update = _.debounce(function (e) {
+      mdInput.value = e.target.value
+      push()
+      count()
+    }, 0)
+
+    const count = () => {
+      console.log()
+      number.value = alpha.value = space.value = tot.value = 0
+      line.value = 1
+      for (const ch of strPre) {
+        if (ch === '\n') {
+          line.value++
+          continue
+        } else if (ch >= '0' && ch <= '9') number.value++
+        else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) alpha.value++
+        else if (ch === ' ') space.value++
+        tot.value++
+      }
+    }
+
+    const push = () => {
+      let a = mdInput.value
+      let b = strPre
+      const info = {}
+      if (a.length < b.length) {
+        info.del = true
+        const tmp = a
+        a = b
+        b = tmp
+      } else info.del = false
+      const len = a.length
+      for (let i = 0; i < len; ++i) {
+        for (let j = i + 1; j <= len; ++j) {
+          const str = a.slice(i, j)
+          if (a.slice(0, i) + a.slice(j, len) === b) {
+            info.pos = i
+            info.ch = str
+            break
+          }
+        }
+      }
+      zStack.push(info)
+      strPre = mdInput.value
+    }
+
+    const withdraw = (info) => {
+      const a = mdInput.value
+      if (info.del) {
+        mdInput.value =
+          a.slice(0, info.pos) + info.ch + a.slice(info.pos, a.length)
+      } else {
+        mdInput.value =
+          a.slice(0, info.pos) + a.slice(info.pos + info.ch.length, a.length)
+      }
+      strPre = mdInput.value
+      count()
+    }
+
+    const ctrlZ = () => {
+      if (zStack.length === 0) return
+      const info = zStack.slice(-1)[0]
+      withdraw(info)
+      info.del = !info.del
+      yStack.push(info)
+      zStack.pop()
+    }
+
+    const ctrlY = () => {
+      if (yStack.length === 0) return
+      const info = yStack.slice(-1)[0]
+      withdraw(info)
+      info.del = !info.del
+      zStack.push(info)
+      yStack.pop()
+    }
+
+    const search = () => {
+      // $('textarea').highlightWithinTextarea({
+      //   highlight: 'llo' // string, regexp, array, function, or custom object
+      // })
+      console.log($)
+    }
 
     return {
       logoUrl,
-      val,
+      mdInput,
+      compiledMarkdown,
+      alpha,
+      number,
+      space,
+      ask,
+      line,
+      tot,
+      ctrlZ,
+      ctrlY,
+      update,
+      search,
       goBack
     }
   }
@@ -176,22 +225,27 @@ export default {
 </script>
 
 <style scoped>
+.title {
+  text-align: center;
+  font-size: 20px;
+}
 
-.el-page-header{
-    background-color: white;
-    color: #333;
-    text-align: center;
-    line-height: 400%;
-    height: 100%;
+.el-page-header {
+  background-color: white;
+  color: #333;
+  text-align: center;
+  line-height: 340%;
+  height: 100%;
 }
 
 .subwindow {
-  background-color:aliceblue;
+  overflow-y: auto;resize:both;
+  background-color: aliceblue;
   box-sizing: border-box;
   height: 100%;
-  border-left: 2px solid #DCDFE6;
-  border-right: 2px solid #DCDFE6;
-  border-top: 4px solid #DCDFE6;
+  border-left: 2px solid #dcdfe6;
+  border-right: 2px solid #dcdfe6;
+  border-top: 4px solid #dcdfe6;
 }
 
 .demonstration {
@@ -211,5 +265,62 @@ img {
   padding-top: 15px;
   height: 175px;
   width: 175px;
+}
+
+#showWindow {
+  overflow:auto;
+  background-color: #f6f6f6;
+}
+
+textarea,
+#showWindow {
+  display: inline-block;
+  width: 50%;
+  height: 600px;
+  vertical-align: top;
+  box-sizing: border-box;
+  padding: 0 20px;
+}
+
+textarea {
+  word-wrap: break-word;
+  border: none;
+  border-right: 2px solid #ccc;
+  resize: none;
+  outline: none;
+  background-color: white;
+  font-size: 14px;
+  font-family: "Monaco", courier, monospace;
+  padding: 20px;
+}
+
+.footer {
+  font-size: 15px;
+  width: 100%;
+  color: white;
+  height: 100%;
+  background-color: #007acc;
+}
+
+.footer-tag {
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+*::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+*::-webkit-scrollbar-track {
+  display: none;
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: hsla(0, 0%, 100%, 0.5);
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-track-piece {
+  border-radius: 10px;
 }
 </style>

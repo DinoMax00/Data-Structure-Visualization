@@ -1,8 +1,0 @@
-{
-    "exclude": ["node_modules"],
-    "typeAcquisition": {
-      "include": [
-        "d3" // 填你想要提示的代码库名字
-      ]
-    }
-}

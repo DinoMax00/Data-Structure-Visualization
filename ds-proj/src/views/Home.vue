@@ -4,9 +4,9 @@
     <p> A Data Structure Visulization Exercise </p>
     <p style="font-size:20px">CS10016502. TongJi Univ</p>
 
-    <el-button type='primary' round icon="el-icon-position" @click="gotoBT">B-Tree</el-button>
+    <el-button type='primary' round icon="el-icon-position" @click="gotoBT">&nbsp;&nbsp;B&nbsp;- 树&nbsp;&nbsp;</el-button>
     &nbsp;&nbsp;&nbsp;
-    <el-button type='primary' round icon="el-icon-view" @click="gotoChain">Chain</el-button>
+    <el-button type='primary' round icon="el-icon-view" @click="gotoChain">文本编辑器</el-button>
   </div>
 </template>
 
