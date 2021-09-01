@@ -11,7 +11,6 @@ class BTnode {
     this.keys = []
     this.childs = []
     this.par = null
-    this.n = 0
     this.id = ++id
   }
 
@@ -19,7 +18,8 @@ class BTnode {
   printTree () {
     console.log('cur', this.keys)
     console.log('par', this.par.keys)
-    console.log('???', this.par.childs)
+    console.log('c', this)
+    console.log('p', this.par)
     console.log('----')
     for (let i = 0; i < this.childs.length; ++i) this.childs[i].printTree()
   }
@@ -30,8 +30,8 @@ class BTnode {
     trace.push(this)
 
     let i = 0
-    while (i < this.n && this.keys[i] < val) { ++i }
-    if (i < this.n && this.keys[i] === val) {
+    while (i < this.keys.length && this.keys[i] < val) { ++i }
+    if (i < this.keys.length && this.keys[i] === val) {
       trace.push(true)
       return
     }
@@ -48,8 +48,8 @@ class BTnode {
   // pos是当前节点在父节点childs中的索引
   insert (val) {
     let i = 0
-    while (i < this.n && this.keys[i] < val) { ++i }
-    if (i < this.n && this.keys[i] === val) { return }
+    while (i < this.keys.length && this.keys[i] < val) { ++i }
+    if (i < this.keys.length && this.keys[i] === val) { return }
 
     if (this.childs.length) {
       this.childs[i].insert(val)
@@ -58,8 +58,7 @@ class BTnode {
 
     this.keys.push(val)
     this.keys.sort((a, b) => a - b)
-    this.n++
-    if (this.n <= MAX_KEY) { return }
+    if (this.keys.length <= MAX_KEY) { return }
     this.splitChild()
     this.printTree()
   }
@@ -68,14 +67,13 @@ class BTnode {
   // 策略是使用目标值左侧最大的数将其替换
   delete (val) {
     let idx = 0
-    for (let i = 0; i < this.n; ++i) {
+    for (let i = 0; i < this.keys.length; ++i) {
       if (this.keys[i] === val) {
         idx = i
         break
       }
     }
     if (this.childs.length === 0) {
-      this.n--
       this.keys.splice(idx, 1)
       this.reBalance()
       return
@@ -85,9 +83,6 @@ class BTnode {
     const maxNode = trace.slice(-2)[0]
     this.keys[idx] = maxNode.keys.slice(-1)[0]
     maxNode.keys.pop()
-    maxNode.n--
-    console.log(this, maxNode)
-    if (val === 0) return
     maxNode.reBalance()
   }
 
@@ -107,9 +102,8 @@ class BTnode {
       }
     }
     x.keys.splice(pos, 0, mid)
-    x.n++
 
-    for (let i = MIN_KEY + 1; i < this.n; ++i) {
+    for (let i = MIN_KEY + 1; i < this.keys.length; ++i) {
       z.keys.push(this.keys[i])
       if (!leaf) {
         z.childs.push(this.childs[i])
@@ -118,47 +112,47 @@ class BTnode {
       }
     }
     if (!leaf) {
-      Visuer.removeLine(this.childs[this.n].par.id, this.childs[this.n].id)
-      z.childs.push(this.childs[this.n])
-      this.childs[this.n].par = z
+      Visuer.removeLine(this.childs[this.keys.length].par.id, this.childs[this.keys.length].id)
+      z.childs.push(this.childs[this.keys.length])
+      this.childs[this.keys.length].par = z
     }
-    z.n = MAX_KEY - MIN_KEY
     z.par = x
-    console.log(x)
     Visuer.initNode(x.par === null ? this.id : x.id, z.id)
     x.childs.splice(pos + 1, 0, z)
-    this.n = MIN_KEY
     this.keys.splice(MIN_KEY)
     this.childs.splice(MIN_KEY + 1)
-    if (x.n > MAX_KEY) x.splitChild()
+    if (x.keys.length > MAX_KEY) x.splitChild()
   }
 
   // 平衡节点
   reBalance () {
-    if (this.n >= MIN_KEY) return
+    if (this.keys.length >= MIN_KEY) return
+
     if (this.par.keys.length === 0) {
       if (this.childs.length === 0) return
       const temp = this.childs[0]
-      console.log(temp.id, temp.childs.length)
-      for (const child of temp.childs) Visuer.removeLine(temp.id, child.id)
+      for (const child of temp.childs) {
+        child.par = this
+        Visuer.removeLine(temp.id, child.id)
+      }
       Visuer.removeLine(this.id, this.childs[0].id)
       Visuer.removeNode(this.childs[0].id)
       this.childs = temp.childs
       this.keys = temp.keys
-      this.n = temp.n
+      this.keys.length = temp.keys.length
       return
     }
+
     const par = this.par
     const idx = par.findIdx(this)
     const bro = idx ? par.childs[idx - 1] : par.childs[idx + 1]
+
     if (idx === 0) {
       this.keys.push(par.keys[0])
-      if (bro.n > MIN_KEY) {
+      if (bro.keys.length > MIN_KEY) {
         par.keys[0] = bro.keys[0]
         bro.keys.splice(0, 1)
-        bro.n--
-        // !!!!
-        if (bro.childs.length > bro.n + 1) {
+        if (bro.childs.length > bro.keys.length + 1) {
           Visuer.removeLine(bro.id, bro.childs[0].id)
           this.childs.push(bro.childs[0])
           bro.childs[0].par = this
@@ -170,23 +164,21 @@ class BTnode {
         Visuer.removeNode(bro.id)
         par.childs.splice(1, 1)
         par.keys.splice(0, 1)
-        par.n--
-        if (par.n === 0) {
+        if (par.keys.length === 0) {
           par.reBalance()
         }
       }
     } else {
       const pn = idx
-      const bn = bro.n
+      const bn = bro.keys.length
       this.keys.push(par.keys[pn - 1])
-      if (bro.n > MIN_KEY) {
+      if (bro.keys.length > MIN_KEY) {
         par.keys[pn - 1] = bro.keys[bn - 1]
         bro.keys.splice(bn - 1, 1)
-        bro.n--
-        if (bro.childs.length > bro.n + 1) {
-          const tmp = bro.n
+        if (bro.childs.length > bro.keys.length + 1) {
+          const tmp = bro.keys.length + 1
           Visuer.removeLine(bro.id, bro.childs[tmp].id)
-          this.childs.push(bro.childs[tmp])
+          this.childs.splice(0, 0, bro.childs[tmp])
           bro.childs[tmp].par = this
           bro.childs.splice(tmp, 1)
         }
@@ -194,10 +186,9 @@ class BTnode {
         Visuer.removeLine(bro.par.id, bro.id)
         this.mergeLhs(bro)
         Visuer.removeNode(bro.id)
-        par.childs.splice(bn - 1, 1)
+        par.childs.splice(pn - 1, 1)
         par.keys.splice(pn - 1, 1)
-        par.n--
-        if (par.n === 0) {
+        if (par.keys.length === 0) {
           par.reBalance()
         }
       }
@@ -212,18 +203,17 @@ class BTnode {
       this.childs.push(val)
       Visuer.removeLine(node.id, val.id)
     }
-    this.n = this.keys.length
   }
 
   // 与左结点合并
   mergeLhs (node) {
     for (const val of node.keys) this.keys.splice(0, 0, val)
+    let i = 0
     for (const val of node.childs) {
       val.par = this.par
-      this.childs.splice(0, 0, val)
+      this.childs.splice(i++, 0, val)
       Visuer.removeLine(node.id, val.id)
     }
-    this.n = this.keys.length
   }
 
   // 寻找子节点的下标
@@ -282,9 +272,10 @@ export class Tree {
     this.node.par.childs.push(this.node)
   }
 
-  search (val) {
+  search (val, show = false) {
     const trace = []
     this.node.search(trace, val)
+    if (show) Visuer.showTrace(trace)
     return trace
   }
 
@@ -311,13 +302,11 @@ export class Tree {
     id = 0
     this.node = new BTnode()
     this.makeRT()
-    const a = [1, 2, 3, 4, 0, 5, -1, 6, 7]
+    const a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     for (const i of a) {
       this.insert(i)
     }
-    this.delete(2)
-    this.delete(4)
-    // 删0会出问题！！！！！
+    this.delete(8)
   }
 
   update () {

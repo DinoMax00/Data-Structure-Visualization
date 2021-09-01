@@ -4,14 +4,14 @@ const DIS_Y = 140
 const DIS_X = 50
 const RECT_W = 100
 const RECT_H = 50
-const DELAY = 1000
+const DELAY = 1500
 
 function getPos (depth, idx, tot) {
   const width = document.getElementById('svg').getBoundingClientRect().width
   // const height = document.getElementById('svg').getBoundingClientRect().height
   const len = RECT_W * tot + DIS_X * (tot - 1)
   const lft = (width - len) / 2
-  return [lft + (idx - 1) * (RECT_W + DIS_X), (depth - 1) * DIS_Y + 50]
+  return [lft + (idx - 1) * (RECT_W + DIS_X), (depth - 1) * DIS_Y + 90]
 }
 
 export class Visuer {
@@ -48,7 +48,6 @@ export class Visuer {
     if (!document.getElementById('e' + src + 'to' + tgt)) {
       return
     }
-    console.log(id)
     const svg = d3.select('svg')
     const l = svg.select(id)
     l.transition()
@@ -81,10 +80,10 @@ export class Visuer {
     g.append('rect')
       .attr('width', RECT_W)
       .attr('height', RECT_H)
-      .attr('fill', 'gainsboro')
+      .attr('class', 'block_border')
 
     g.append('rect')
-      .attr('id', 'node' + id)
+      .attr('id', 'rect' + id)
       .attr('x', 6)
       .attr('y', 6)
       .attr('width', RECT_W - 12)
@@ -94,7 +93,7 @@ export class Visuer {
     g.append('text')
       .attr('id', 'text' + id)
       .attr('y', 36)
-      .attr('x', key.length === 1 ? 40 : key.length >= 5 ? 5 : 26)
+      .attr('x', key.length === 1 ? 40 : key.length === 4 ? 18 : key.length >= 5 ? 5 : 26)
       .text(key)
     g.transition().duration(DELAY).attr('transform', 'translate(' + X + ',' + Y + ')')
     g.select('text').transition().duration(DELAY).text(key)
@@ -118,6 +117,40 @@ export class Visuer {
       .attr('y1', y1 + RECT_H / 2)
       .attr('x2', x2 + RECT_W / 2)
       .attr('y2', y2 + RECT_H / 2)
+  }
+
+  static showTrace (arr) {
+    const len = arr.length
+    const svg = d3.select('svg')
+    for (let i = 0; i < len - 1; ++i) {
+      const id = '#rect' + arr[i].id
+      svg.select(id)
+        .transition()
+        .delay(DELAY * i)
+        .attr('class', 'block_node_trace')
+        .transition()
+        .delay(DELAY * 2 - 500)
+        .attr('class', 'block_node')
+    }
+
+    for (let i = 0; i < len - 2; ++i) {
+      const id = '#e' + arr[i].id + 'to' + arr[i + 1].id
+      svg.select(id)
+        .transition()
+        .delay(DELAY * (i + 1))
+        .attr('class', 'edge_trace')
+        .transition()
+        .delay(DELAY - 500)
+        .attr('class', 'edge')
+    }
+    const id = '#rect' + arr[len - 2].id
+    svg.select(id)
+      .transition()
+      .delay(DELAY * (len - 1))
+      .attr('class', arr[len - 1] ? 'block_node_success' : 'block_node_fall')
+      .transition()
+      .delay(DELAY * 2)
+      .attr('class', 'block_node')
   }
 
   delete (id) {

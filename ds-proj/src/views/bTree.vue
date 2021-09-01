@@ -40,10 +40,11 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
-// import * as d3 from 'd3'
+// import Swal from 'sweetalert2'
 import { Tree } from '../bTree'
+import { ElNotification } from 'element-plus'
 
 export default {
   setup () {
@@ -53,18 +54,10 @@ export default {
     const router = useRouter()
 
     const goBack = () => {
-      tree.insert(5)
       router.push('/')
     }
 
     onMounted(() => {
-      // const svg = d3.selectAll('svg')
-      // const zoomHandler = d3.zoom()
-      //   .on('zoom', zoomActions)
-      // zoomHandler(svg)
-      // function zoomActions () {
-      //   svg.attr('transform', d3.event.transform)
-      // }
       tree = new Tree()
     })
 
@@ -73,19 +66,40 @@ export default {
     const deleteVal = ref('')
     const findVal = ref('')
 
+    const judgeNum = (n) => {
+      if (isNaN(n) || n < -99 || n > 99) {
+        ElNotification.error({
+          title: 'Invalid Input!',
+          message: h(
+            'i',
+            { style: 'color: black' },
+            'the number must in range [-99, 99]'
+          )
+        })
+        return false
+      }
+      return true
+    }
+
     const insert = () => {
-      tree.insert(parseInt(insertVal.value))
+      const n = parseInt(insertVal.value)
       insertVal.value = ''
+      if (!judgeNum(n)) return
+      tree.insert(n)
     }
 
     const del = () => {
-      tree.delete(parseInt(deleteVal.value))
+      const n = parseInt(deleteVal.value)
       deleteVal.value = ''
+      if (!judgeNum(n)) return
+      tree.delete(n)
     }
 
     const find = () => {
-      tree.search(parseInt(findVal.value))
+      const n = parseInt(findVal.value)
       findVal.value = ''
+      if (!judgeNum(n)) return
+      tree.search(n, true)
     }
 
     return {

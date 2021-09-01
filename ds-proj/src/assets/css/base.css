@@ -11,21 +11,42 @@
 }
 
 .block_node {
-    fill:rgb(255, 255, 255)
+    fill:white
+}
+
+.block_node_trace {
+    fill:rgb(228, 162, 162)
+}
+
+.block_node_success {
+    fill:#2ecc71
+}
+
+.block_node_fall {
+    fill:#c0392b
 }
 
 .block_node:hover {
     fill:rgb(240, 236, 236)
 }
 
+.block_border {
+    fill:#81ecec
+}
+
 .edge {
     stroke-width: 7px;
-    stroke:gainsboro;
+    stroke:#81ecec
+}
+
+.edge_trace {
+    stroke-width: 8px;
+    stroke:rgb(228, 162, 162);
 }
 
 .edge:hover {
-    stroke-width: 6px;
-    stroke:darkgray
+    stroke-width: 8px;
+    stroke:#00cec9
 }
 
 text {
