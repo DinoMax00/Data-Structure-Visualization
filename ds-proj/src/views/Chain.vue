@@ -14,7 +14,7 @@
       <div class="subwindow menu-color">
         <div class="block" style="padding-bottom: 0px; padding-top: 15px">
           <h1 class="title">🛫 Markdown Editor 🛫</h1>
-          <p>say something</p>
+          <p>&nbsp;&nbsp;Dead simple Markdown editor.</p>
         </div>
         <div class="block">
           <div class="demonstration">Find:</div>
@@ -88,21 +88,16 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { markdown } from 'markdown'
 import * as _ from 'lodash'
-// window.jQuery = $
-// require('../jquery.highlight-within-textarea.js')
-// require('../jquery.highlight-within-textarea.css')
+require('../jquery.highlight-within-textarea.js')
+require('../jquery.highlight-within-textarea.css')
 export default {
   setup () {
     const logoUrl = require('../assets/logo.png')
-
     const router = useRouter()
-
     const goBack = () => {
       router.push('/')
     }
-
     onMounted(() => { count() })
-
     let strPre = '## Hello World! ##'
     const mdInput = ref('## Hello World! ##')
     const tot = ref(0)
@@ -113,19 +108,16 @@ export default {
     const ask = ref('')
     const zStack = []
     const yStack = []
-
     const compiledMarkdown = computed({
       get () {
         return markdown.toHTML(mdInput.value, 'Maruku')
       }
     })
-
     const update = _.debounce(function (e) {
       mdInput.value = e.target.value
       push()
       count()
     }, 0)
-
     const count = () => {
       console.log()
       number.value = alpha.value = space.value = tot.value = 0
@@ -140,7 +132,6 @@ export default {
         tot.value++
       }
     }
-
     const push = () => {
       let a = mdInput.value
       let b = strPre
@@ -152,20 +143,35 @@ export default {
         b = tmp
       } else info.del = false
       const len = a.length
-      for (let i = 0; i < len; ++i) {
-        for (let j = i + 1; j <= len; ++j) {
-          const str = a.slice(i, j)
-          if (a.slice(0, i) + a.slice(j, len) === b) {
-            info.pos = i
-            info.ch = str
-            break
-          }
+      // O(n) check
+      let pre = 0
+      for (; pre < len; ++pre) {
+        if (a[pre] !== b[pre]) {
+          break
         }
       }
+      for (let i = len; i >= 0; --i) {
+        const x = len - i
+        if (b.length - x <= pre) {
+          console.log(i)
+          info.pos = b.length - x
+          info.ch = a.slice(info.pos, info.pos + a.length - b.length)
+          break
+        }
+      }
+      // for (let i = 0; i < len; ++i) {
+      //   for (let j = i + 1; j <= len; ++j) {
+      //     const str = a.slice(i, j)
+      //     if (a.slice(0, i) + a.slice(j, len) === b) {
+      //       info.pos = i
+      //       info.ch = str
+      //       break
+      //     }
+      //   }
+      // }
       zStack.push(info)
       strPre = mdInput.value
     }
-
     const withdraw = (info) => {
       const a = mdInput.value
       if (info.del) {
@@ -178,7 +184,6 @@ export default {
       strPre = mdInput.value
       count()
     }
-
     const ctrlZ = () => {
       if (zStack.length === 0) return
       const info = zStack.slice(-1)[0]
@@ -187,7 +192,6 @@ export default {
       yStack.push(info)
       zStack.pop()
     }
-
     const ctrlY = () => {
       if (yStack.length === 0) return
       const info = yStack.slice(-1)[0]
@@ -196,14 +200,12 @@ export default {
       zStack.push(info)
       yStack.pop()
     }
-
     const search = () => {
-      // $('textarea').highlightWithinTextarea({
-      //   highlight: 'llo' // string, regexp, array, function, or custom object
-      // })
+      $('textarea').highlightWithinTextarea({
+        highlight: 'lo' // string, regexp, array, function, or custom object
+      })
       console.log($)
     }
-
     return {
       logoUrl,
       mdInput,
@@ -229,7 +231,6 @@ export default {
   text-align: center;
   font-size: 20px;
 }
-
 .el-page-header {
   background-color: white;
   color: #333;
@@ -237,7 +238,6 @@ export default {
   line-height: 340%;
   height: 100%;
 }
-
 .subwindow {
   overflow-y: auto;resize:both;
   background-color: aliceblue;
@@ -247,11 +247,9 @@ export default {
   border-right: 2px solid #dcdfe6;
   border-top: 4px solid #dcdfe6;
 }
-
 .demonstration {
   padding-bottom: 15px;
 }
-
 .block {
   margin-left: 5%;
   padding-top: 23px;
@@ -259,29 +257,25 @@ export default {
   width: 90%;
   border-bottom: 1px solid black;
 }
-
 img {
   margin: 0 auto;
-  padding-top: 15px;
+  padding-top: 60px;
   height: 175px;
   width: 175px;
 }
-
 #showWindow {
   overflow:auto;
   background-color: #f6f6f6;
 }
-
 textarea,
 #showWindow {
   display: inline-block;
   width: 50%;
-  height: 600px;
+  height: 640px;
   vertical-align: top;
   box-sizing: border-box;
   padding: 0 20px;
 }
-
 textarea {
   word-wrap: break-word;
   border: none;
@@ -293,7 +287,6 @@ textarea {
   font-family: "Monaco", courier, monospace;
   padding: 20px;
 }
-
 .footer {
   font-size: 15px;
   width: 100%;
@@ -301,12 +294,10 @@ textarea {
   height: 100%;
   background-color: #007acc;
 }
-
 .footer-tag {
   font-weight: 600;
   margin-left: 5px;
 }
-
 *::-webkit-scrollbar {
   height: 5px;
   width: 5px;
