@@ -42,7 +42,6 @@
 <script>
 import { onMounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
-// import Swal from 'sweetalert2'
 import { Tree } from '../bTree'
 import { ElNotification } from 'element-plus'
 
