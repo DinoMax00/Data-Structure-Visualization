@@ -23,7 +23,7 @@ export default {
     }
 
     const gotoChain = () => {
-      router.push('/Chain')
+      router.push('/Editor')
     }
 
     return {

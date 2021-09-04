@@ -32,8 +32,8 @@
     </el-col>
     <!-- svg -->
     <el-col :span="18">
-        <div class="subwindow" >
-          <svg id="svg" width="100%" height="100%"></svg>
+        <div class="subwindow" id = 'svg-here'>
+          <!-- <svg id="svg" width="100%" height="100%"></svg> -->
         </div>
     </el-col>
   </el-row>
@@ -44,7 +44,7 @@ import { onMounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { Tree } from '../bTree'
 import { ElNotification } from 'element-plus'
-
+import * as d3 from 'd3'
 export default {
   setup () {
     let tree
@@ -57,6 +57,8 @@ export default {
     }
 
     onMounted(() => {
+      d3.select('svg').remove()
+      d3.select('#svg-here').append('svg').attr('id', 'svg').attr('height', '100%').attr('width', '100%')
       tree = new Tree()
     })
 

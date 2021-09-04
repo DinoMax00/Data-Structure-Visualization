@@ -1,14 +1,13 @@
 import * as d3 from 'd3'
 
-const DIS_Y = 140
-const DIS_X = 50
-const RECT_W = 100
+const DIS_Y = 160
+const DIS_X = 30
+const RECT_W = 90
 const RECT_H = 50
 const DELAY = 1500
 
 function getPos (depth, idx, tot) {
   const width = document.getElementById('svg').getBoundingClientRect().width
-  // const height = document.getElementById('svg').getBoundingClientRect().height
   const len = RECT_W * tot + DIS_X * (tot - 1)
   const lft = (width - len) / 2
   return [lft + (idx - 1) * (RECT_W + DIS_X), (depth - 1) * DIS_Y + 90]

@@ -60,7 +60,6 @@ class BTnode {
     this.keys.sort((a, b) => a - b)
     if (this.keys.length <= MAX_KEY) { return }
     this.splitChild()
-    this.printTree()
   }
 
   // 删除操作
@@ -146,7 +145,6 @@ class BTnode {
     const par = this.par
     const idx = par.findIdx(this)
     const bro = idx ? par.childs[idx - 1] : par.childs[idx + 1]
-
     if (idx === 0) {
       this.keys.push(par.keys[0])
       if (bro.keys.length > MIN_KEY) {
@@ -199,7 +197,7 @@ class BTnode {
   mergeRhs (node) {
     for (const val of node.keys) this.keys.push(val)
     for (const val of node.childs) {
-      val.par = this.par
+      val.par = this
       this.childs.push(val)
       Visuer.removeLine(node.id, val.id)
     }
@@ -210,7 +208,7 @@ class BTnode {
     for (const val of node.keys) this.keys.splice(0, 0, val)
     let i = 0
     for (const val of node.childs) {
-      val.par = this.par
+      val.par = this
       this.childs.splice(i++, 0, val)
       Visuer.removeLine(node.id, val.id)
     }
@@ -286,7 +284,7 @@ export class Tree {
     }
     this.makeRT()
     this.update()
-    this.print()
+    // this.print()
   }
 
   delete (val) {
@@ -295,18 +293,17 @@ export class Tree {
     const tar = trace.slice(-2)[0]
     tar.delete(val)
     this.update()
-    this.print()
+    // this.print()
   }
 
   clear () {
     id = 0
     this.node = new BTnode()
     this.makeRT()
-    const a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    const a = [1, 2, 3, 4, 5, 6, 7, 8]
     for (const i of a) {
       this.insert(i)
     }
-    this.delete(8)
   }
 
   update () {

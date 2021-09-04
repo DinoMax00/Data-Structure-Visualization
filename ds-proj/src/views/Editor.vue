@@ -17,7 +17,7 @@
           <p style="text-align: center;">A dead simple Markdown editor.</p>
         </div>
         <div class="block">
-          <div class="demonstration">Find:</div>
+          <div class="demonstration">Search:</div>
           <el-input
             v-model="ask"
             placeholder="Press Enter to confirm"
@@ -152,11 +152,11 @@ export default {
       let b = strPre
       const info = {}
       if (a.length < b.length) {
-        info.del = true
+        info.del = 1
         const tmp = a
         a = b
         b = tmp
-      } else info.del = false
+      } else info.del = 0
       const len = a.length
       // O(n) check
       let pre = 0
@@ -173,43 +173,56 @@ export default {
           break
         }
       }
+      if ((b.slice(0, info.pos) + info.ch + b.slice(info.pos, b.length)) !== a) {
+        info.del = 2
+        info.ch = strPre
+      }
       zStack.push(info)
       strPre = mdInput.value
     }
 
     const withdraw = (info) => {
-      count()
       const a = mdInput.value
-      if (info.del) {
+      if (info.del === 1) {
         mdInput.value =
           a.slice(0, info.pos) + info.ch + a.slice(info.pos, a.length)
-      } else {
+      } else if (info.del === 0) {
         mdInput.value =
           a.slice(0, info.pos) + a.slice(info.pos + info.ch.length, a.length)
+      } else {
+        mdInput.value = info.ch
       }
-      strPre = mdInput.value
+      count()
     }
 
     const ctrlZ = () => {
       if (zStack.length === 0) return
+      $('textarea').highlightWithinTextarea('destroy')
       const info = zStack.slice(-1)[0]
       withdraw(info)
-      info.del = !info.del
+      if (info.del === 0) info.del = 1
+      else if (info.del === 1) info.del = 0
+      if (info.del === 2) info.ch = strPre
+      strPre = mdInput.value
       yStack.push(info)
       zStack.pop()
     }
 
     const ctrlY = () => {
       if (yStack.length === 0) return
+      $('textarea').highlightWithinTextarea('destroy')
       const info = yStack.slice(-1)[0]
       withdraw(info)
-      info.del = !info.del
+      if (info.del === 0) info.del = 1
+      else if (info.del === 1) info.del = 0
+      if (info.del === 2) info.ch = strPre
+      strPre = mdInput.value
       zStack.push(info)
       yStack.pop()
     }
 
     const search = () => {
-      $('.my-textarea').highlightWithinTextarea('destroy')
+      $('textarea').highlightWithinTextarea('destroy')
       $('textarea').highlightWithinTextarea({
         highlight: ask.value
       })
@@ -272,8 +285,8 @@ export default {
 }
 .block {
   margin-left: 5%;
-  padding-top: 23px;
-  padding-bottom: 23px;
+  padding-top: 30px;
+  padding-bottom: 40px;
   width: 90%;
   border-bottom: 1px solid black;
 }
@@ -291,7 +304,7 @@ img {
 #showWindow {
   display: inline-block;
   width: 50%;
-  height: 640px;
+  height: 690px;
   vertical-align: top;
   box-sizing: border-box;
   padding: 0 20px;
@@ -306,7 +319,7 @@ img {
 }
 textarea {
   width: 95%;
-  height: 620px;
+  height: 665px;
   font-size: 14px;
   font-family: "Monaco", courier, monospace;
   border: none;
