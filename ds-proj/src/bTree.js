@@ -8,9 +8,13 @@ const nodeDepth = []
 const nodeIdx = []
 class BTnode {
   constructor () {
+    // 节点内数据
     this.keys = []
+    // 子节点指针
     this.childs = []
+    // 父节点指针
     this.par = null
+    // 节点编号
     this.id = ++id
   }
 
@@ -35,7 +39,7 @@ class BTnode {
       trace.push(true)
       return
     }
-
+    // 叶子结点 查询失败
     if (this.childs.length === 0) {
       trace.push(false)
       return
@@ -45,7 +49,6 @@ class BTnode {
   }
 
   // 插入
-  // pos是当前节点在父节点childs中的索引
   insert (val) {
     let i = 0
     while (i < this.keys.length && this.keys[i] < val) { ++i }
@@ -284,7 +287,6 @@ export class Tree {
     }
     this.makeRT()
     this.update()
-    // this.print()
   }
 
   delete (val) {
