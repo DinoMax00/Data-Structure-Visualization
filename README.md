@@ -1,6 +1,6 @@
 # Data-Structure-Visualization
 
-B树+markdown编辑器，代码和界面都很丑
+B树+markdown编辑器
  
 > vue3 + electron + d3 + element-ui
 
